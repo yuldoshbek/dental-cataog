@@ -4,17 +4,13 @@
   publish = "dist"
 
 [functions]
-  directory = "netlify/functions"
+  directory    = "netlify/functions"
+  node_bundler = "esbuild"
 
-# API редиректы → Netlify Functions
+# Все /api/* запросы → единая Netlify Function
 [[redirects]]
   from   = "/api/*"
-  to     = "/.netlify/functions/api/:splat"
-  status = 200
-
-[[redirects]]
-  from   = "/uploads/*"
-  to     = "/.netlify/functions/uploads/:splat"
+  to     = "/.netlify/functions/api"
   status = 200
 
 # SPA fallback — все маршруты → index.html

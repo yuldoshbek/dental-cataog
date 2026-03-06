@@ -5,7 +5,9 @@
  * При появлении нового бэкенда URL меняется только здесь.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+// На Netlify — пустая строка = тот же домен (relative URL).
+// Для локальной разработки Vite проксирует /api → localhost:3001
+const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
 // ─── HTTP Helper ──────────────────────────────────────────────────────────────
 
