@@ -312,9 +312,15 @@ export const handler = async (event) => {
     const segments = path.split('/').filter(Boolean);
     const qs = event.queryStringParameters ?? {};
 
+    // Netlify Functions иногда кодируют тело в base64 (isBase64Encoded)
     let body = {};
     if (event.body) {
-        try { body = JSON.parse(event.body); } catch { /* ignore */ }
+        try {
+            const raw = event.isBase64Encoded
+                ? Buffer.from(event.body, 'base64').toString('utf-8')
+                : event.body;
+            body = JSON.parse(raw);
+        } catch { /* ignore */ }
     }
 
     try {
