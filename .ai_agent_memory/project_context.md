@@ -4,7 +4,7 @@
 Внутренний web-каталог (шпаргалка) стоматологического оборудования для менеджеров по продажам. Помогает строить диалог с клиентом во время звонка: быстро найти товар, цену, характеристики, отправить клиенту ссылку.
 
 ## Стек технологий
-- **Frontend:** React 19, Vite 7, Tailwind CSS v3, Lucide React, React Router v6
+- **Frontend:** React 19, Vite 7, Tailwind CSS v3, Lucide React, React Router v7.13.1
 - **API (Netlify):** Netlify Functions (Node.js) — in-memory store с demo-данными
 - **API (VPS):** Node.js 22+, Express, SQLite (`node:sqlite` — без доп. зависимостей)
 - **Auth:** JWT (jsonwebtoken) + прямое сравнение пароля (без bcrypt в Netlify Function)

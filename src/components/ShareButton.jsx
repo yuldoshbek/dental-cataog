@@ -8,11 +8,11 @@ import React, { useState } from 'react';
 import { Share2, Check } from 'lucide-react';
 import { buildShareUrl } from '../api/index.js';
 
-export default function ShareButton({ productId, className = '' }) {
+export default function ShareButton({ productId, shareSlug, className = '' }) {
     const [copied, setCopied] = useState(false);
 
     async function handleShare() {
-        const url = buildShareUrl(productId);
+        const url = buildShareUrl(shareSlug ?? productId);
 
         // Используем нативный Share API если доступен (мобильные)
         if (navigator.share) {

@@ -81,6 +81,22 @@ db.exec(`
     ip_address   TEXT,
     created_at   TEXT DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS external_inquiries (
+    id           TEXT PRIMARY KEY,
+    source       TEXT NOT NULL DEFAULT 'bitrix',
+    product_id   TEXT,
+    share_slug   TEXT,
+    external_code TEXT,
+    brand        TEXT,
+    model        TEXT,
+    type         TEXT NOT NULL,
+    client_name  TEXT,
+    client_phone TEXT,
+    message      TEXT,
+    ip_address   TEXT,
+    created_at   TEXT DEFAULT (datetime('now'))
+  );
 `);
 
 // ─── Seed начальных данных ─────────────────────────────────────────────────

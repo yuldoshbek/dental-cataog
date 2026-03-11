@@ -115,9 +115,44 @@ body = JSON.parse(raw);
 | Share-страница (`/share/:id`) | ✅ WhatsApp-интеграция |
 | `npm run build` | ✅ Собирается без ошибок |
 
+## [11.03.2026] — Этап 4: Аудит + Новая архитектура + Эталонная карточка
+
+### Файлы добавлены/изменены:
+
+**Новые файлы:**
+- `ARCHITECTURE.md` (корень проекта) — полный тех. документ новой архитектуры
+- `src/pages/ProductPage.jsx` — эталонный шаблон карточки товара
+- `catalog/` — заготовка Bitrix-интеграции (bitrixClient, bitrixConfig, bitrixCatalogRepository)
+- `server/catalog/` — серверный слой (localCatalogRepository, inquiryStore)
+
+**Изменения:**
+- `src/App.jsx` — добавлен маршрут `/product/:slug`
+- `src/components/ProductCard.jsx` — добавлена кнопка "Полная карточка" → Link на /product/:slug
+- `.ai_agent_memory/project_context.md` — исправлено: React Router v6 → v7.13.1
+
+### Эталонная карточка (ProductPage.jsx):
+- Данные: Shining 3D Aoralscan 3 Wireless (из Сканеры.docx)
+- Маршрут: `/product/:slug`
+- Секции: Галерея фото | Информация | Вкладки | Share-блок
+- Вкладки: Описание / Характеристики / Применение / Комплектация
+- Share: WhatsApp, Telegram, Копировать ссылку
+- Таблица характеристик сгруппирована по блокам
+
+### Новая архитектура (ARCHITECTURE.md):
+- Каталог (SQLite на сервере) = мастер-база
+- Bitrix = синхронизируется в обе стороны
+- Двусторонняя синхронизация: Admin→Bitrix + Bitrix→Admin через webhook
+- 22 поля смарт-процесса Bitrix (UF_BRAND, UF_SPECS_JSON, UF_PHOTOS и др.)
+- Инструкция по созданию смарт-процесса
+
+### Статус после деплоя:
+- Netlify URL: `/product/shining3d-aoralscan3-wireless` — эталонная карточка
+- `npm run build` ✅
+
 ## Следующие шаги
 
-1. Добавить реальные данные товаров (заполнить через admin-панель)
-2. Настроить `VITE_WHATSAPP_PHONE` в Netlify env → WhatsApp будет открываться с реальным номером
-3. Подключить реальный домен к Netlify (Site settings → Domain management)
-4. При необходимости — развернуть на VPS с SQLite для постоянного хранения данных
+1. Создать смарт-процесс в Bitrix по инструкции в ARCHITECTURE.md
+2. Получить webhook URL и Entity Type ID → добавить в .env
+3. Реализовать двустороннюю синхронизацию (server/services/bitrixSync.js)
+4. Обновить Админку под новый шаблон карточки (SpecsEditor, ListEditor, ImageUploader)
+5. Добавить первые реальные товары через Админку или Bitrix

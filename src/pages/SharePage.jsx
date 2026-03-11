@@ -10,8 +10,8 @@ import {
     CheckCircle, MessageCircle, ChevronLeft, ChevronRight,
     Phone, Send, X, Loader, AlertCircle, Share2
 } from 'lucide-react';
-import { useProduct } from '../hooks/useProducts.js';
-import { inquiriesApi, getImageUrl, buildWhatsAppUrl } from '../api/index.js';
+import { useSharedProduct } from '../hooks/useProducts.js';
+import { inquiriesApi, buildWhatsAppUrl } from '../api/index.js';
 import ImageGallery from '../components/ImageGallery.jsx';
 import DetailRow from '../components/DetailRow.jsx';
 
@@ -19,7 +19,7 @@ const MANAGER_PHONE = import.meta.env.VITE_WHATSAPP_PHONE ?? '';
 
 export default function SharePage() {
     const { id } = useParams();
-    const { product, loading, error } = useProduct(id);
+    const { product, loading, error } = useSharedProduct(id);
     const [activeTab, setActiveTab] = useState('info');
     const [modalType, setModalType] = useState(null); // 'approve' | 'question'
     const [formData, setFormData] = useState({ name: '', phone: '', message: '' });
@@ -28,8 +28,6 @@ export default function SharePage() {
 
     if (loading) return <LoadingScreen />;
     if (error || !product) return <ErrorScreen message={error} />;
-
-    const primaryImage = product.images?.find(i => i.is_primary) ?? product.images?.[0];
 
     function openWhatsApp(type) {
         const name = product.brand + ' ' + product.model;
@@ -142,7 +140,9 @@ export default function SharePage() {
             <div className="px-4 py-5 space-y-3">
                 {activeTab === 'info' && (
                     <>
-                        <p className="text-sm text-gray-700 leading-relaxed">{product.description}</p>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                            {product.clientDescription || product.description}
+                        </p>
                         {product.colors && <DetailRow label="Цвета" value={product.colors} />}
                         {product.upholstery && <DetailRow label="Обивка" value={product.upholstery} />}
                         {product.baseConfig && <DetailRow label="Комплектация" value={product.baseConfig} />}

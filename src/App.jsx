@@ -10,6 +10,7 @@ import CatalogPage from './pages/CatalogPage.jsx';
 import SharePage from './pages/SharePage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
+import ProductPage from './pages/ProductPage.jsx';
 
 export default function App() {
   return (
@@ -18,6 +19,9 @@ export default function App() {
         <Routes>
           {/* Каталог менеджера */}
           <Route path="/" element={<CatalogPage />} />
+
+          {/* Полная карточка товара */}
+          <Route path="/product/:slug" element={<ProductPage />} />
 
           {/* Публичная страница для клиента */}
           <Route path="/share/:id" element={<SharePage />} />

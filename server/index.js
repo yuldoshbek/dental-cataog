@@ -20,6 +20,7 @@ import { fileURLToPath } from 'url';
 import productsRouter from './routes/products.js';
 import uploadRouter from './routes/upload.js';
 import authRouter from './routes/auth.js';
+import { getCatalogProviderInfo } from './catalog/index.js';
 
 // Импорт db (инициализирует схему и seed при первом запуске)
 import './db.js';
@@ -28,6 +29,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT ?? 3001;
 const isDev = process.env.NODE_ENV !== 'production';
+const catalogProvider = getCatalogProviderInfo();
 
 // ─── Security ────────────────────────────────────────────────────────────────
 app.use(helmet({
@@ -86,7 +88,12 @@ app.use('/api/upload', uploadRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', env: process.env.NODE_ENV, ts: new Date().toISOString() });
+    res.json({
+        status: 'ok',
+        env: process.env.NODE_ENV,
+        ts: new Date().toISOString(),
+        catalog: catalogProvider,
+    });
 });
 
 // ─── 404 handler ──────────────────────────────────────────────────────────────
@@ -107,6 +114,7 @@ app.use((err, _req, res, _next) => {
 const server = app.listen(PORT, () => {
     console.log(`✅ Dental Catalog API запущен на порту ${PORT} [${process.env.NODE_ENV ?? 'development'}]`);
     console.log(`   Uploads: ${path.join(__dirname, 'uploads')}`);
+    console.log(`   Catalog: ${catalogProvider.provider} (${catalogProvider.source})`);
     if (isDev) console.log(`   API:     http://localhost:${PORT}/api/products`);
 });
 

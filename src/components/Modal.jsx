@@ -28,7 +28,7 @@ export default function Modal({ product, setSelectedProduct }) {
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <ShareButton productId={product.id} />
+                        <ShareButton productId={product.id} shareSlug={product.shareSlug} />
                         <button
                             onClick={() => setSelectedProduct(null)}
                             className="p-2 bg-white rounded-full hover:bg-gray-100 text-gray-500 transition-colors shadow-sm ml-1"
@@ -98,7 +98,7 @@ export default function Modal({ product, setSelectedProduct }) {
 
                     <div className="mt-6 pt-5 border-t flex items-center justify-between">
                         <p className="text-xs text-gray-400">ID: {product.id}</p>
-                        <ShareButton productId={product.id} />
+                        <ShareButton productId={product.id} shareSlug={product.shareSlug} />
                     </div>
                 </div>
             </div>

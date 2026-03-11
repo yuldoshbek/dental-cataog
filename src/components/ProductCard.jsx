@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   ChevronRight, Stethoscope, Wind, Thermometer, Activity,
   ScanFace, Camera, Monitor, Zap, Package
@@ -46,9 +47,22 @@ export default function ProductCard({ product, setSelectedProduct }) {
 
         <div className="mt-auto space-y-2">
           <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
-          <button className="text-blue-600 text-sm font-medium flex items-center group-hover:text-blue-800 mt-2">
-            Все характеристики <ChevronRight size={16} className="ml-1" />
-          </button>
+          <div className="flex items-center gap-2 mt-2">
+            <button
+              onClick={() => setSelectedProduct(product)}
+              className="text-blue-600 text-sm font-medium flex items-center group-hover:text-blue-800"
+            >
+              Кратко <ChevronRight size={16} className="ml-0.5" />
+            </button>
+            <span className="text-gray-200">|</span>
+            <Link
+              to={`/product/${product.slug ?? product.id}`}
+              onClick={e => e.stopPropagation()}
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
+            >
+              Полная карточка <ChevronRight size={16} />
+            </Link>
+          </div>
         </div>
       </div>
     </div>

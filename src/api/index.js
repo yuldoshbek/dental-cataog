@@ -56,6 +56,8 @@ export const productsApi = {
 
     getById: (id) => request(`/api/products/${id}`),
 
+    getShared: (slug) => request(`/api/share/${slug}`),
+
     create: (data) =>
         request('/api/products', { method: 'POST', body: JSON.stringify(data) }),
 
@@ -76,15 +78,24 @@ export const categoriesApi = {
 // ─── Upload ──────────────────────────────────────────────────────────────────
 
 export const uploadApi = {
-    upload: (productId, files) => {
+    upload: async (productId, files) => {
         const formData = new FormData();
         Array.from(files).forEach((f) => formData.append('images', f));
         const token = localStorage.getItem('admin_token');
-        return fetch(`${BASE_URL}/api/upload/${productId}`, {
+        const response = await fetch(`${BASE_URL}/api/upload/${productId}`, {
             method: 'POST',
             headers: token ? { Authorization: `Bearer ${token}` } : {},
             body: formData,
-        }).then((r) => r.json());
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            const err = new Error(data.error ?? `HTTP ${response.status}`);
+            err.status = response.status;
+            throw err;
+        }
+
+        return data;
     },
 
     delete: (imageId) =>
@@ -111,8 +122,8 @@ export function getImageUrl(filename) {
     return `${BASE_URL}/uploads/${filename}`;
 }
 
-export function buildShareUrl(productId) {
-    return `${window.location.origin}/share/${productId}`;
+export function buildShareUrl(identifier) {
+    return `${window.location.origin}/share/${identifier}`;
 }
 
 export function buildWhatsAppUrl(phone, message) {
