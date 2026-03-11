@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.gitignore
+*.md
+server/node_modules
+server/dental.db
+server/uploads
+server/.env
+.env
+.env.*
+npm-debug.log

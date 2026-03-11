@@ -1,0 +1,65 @@
+# ──────────────────────────────────────────────────────────────────────────
+# docker-compose.yml — Dental Catalog
+#
+# Сервисы:
+#   api  — Express API (Node 22, SQLite) на порту 3001
+#   web  — Nginx: раздаёт frontend (dist/) + проксирует /api/ и /uploads/
+#
+# Данные:
+#   ./data/dental.db  — SQLite база данных (постоянная)
+#   ./uploads/        — загруженные фото товаров
+#
+# Запуск:
+#   docker-compose up -d
+# ──────────────────────────────────────────────────────────────────────────
+
+version: '3.9'
+
+services:
+
+  # ── API (Node.js + SQLite) ──────────────────────────────────────────────
+  api:
+    build: ./server
+    container_name: dental-api
+    restart: unless-stopped
+    env_file: ./server/.env
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    volumes:
+      # SQLite база данных — хранится на сервере, не в образе
+      - ./data/dental.db:/app/dental.db
+      # Загруженные изображения
+      - ./uploads:/app/uploads
+    networks:
+      - dental-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
+
+  # ── Web (Nginx: frontend + reverse proxy) ───────────────────────────────
+  web:
+    image: nginx:1.25-alpine
+    container_name: dental-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Собранный frontend (заполняется CI/CD)
+      - ./dist:/usr/share/nginx/html:ro
+      # Конфиг nginx
+      - ./nginx.docker.conf:/etc/nginx/conf.d/default.conf:ro
+      # SSL-сертификаты Let's Encrypt (certbot монтирует сюда)
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - api
+    networks:
+      - dental-network
+
+networks:
+  dental-network:
+    driver: bridge

@@ -1,0 +1,92 @@
+# ──────────────────────────────────────────────────────────────────────────
+# .gitlab-ci.yml — Dental Catalog CI/CD
+#
+# Pipeline при push в main:
+#   1. build  — собрать React frontend (npm run build)
+#   2. deploy — задеплоить на VPS (Docker Compose)
+#
+# Требования в GitLab (Settings → CI/CD → Variables):
+#   SSH_PRIVATE_KEY   — приватный SSH-ключ для доступа на VPS
+#   SSH_USER          — пользователь на сервере (например: deploy)
+#   SSH_HOST          — IP или домен сервера
+#   APP_DIR           — путь к проекту на сервере (/var/www/dental-catalog)
+#   VITE_API_URL      — URL API (пусто если на том же домене)
+#   VITE_WHATSAPP_PHONE — номер WhatsApp менеджера
+# ──────────────────────────────────────────────────────────────────────────
+
+stages:
+  - build
+  - deploy
+
+variables:
+  NODE_VERSION: "22"
+
+# ── 1. BUILD ────────────────────────────────────────────────────────────────
+build:
+  stage: build
+  image: node:22-alpine
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - node_modules/
+  script:
+    - echo "📦 Установка зависимостей..."
+    - npm ci
+    - echo "🔨 Сборка frontend..."
+    - npm run build
+    - echo "✅ Build готов ($(du -sh dist/ | cut -f1))"
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+  only:
+    - main
+
+# ── 2. DEPLOY ───────────────────────────────────────────────────────────────
+deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client rsync
+    # Настроить SSH
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+  script:
+    - echo "🚀 Деплой на $SSH_HOST..."
+
+    # 1. Скопировать собранный frontend на сервер
+    - rsync -az --delete dist/ "$SSH_USER@$SSH_HOST:$APP_DIR/dist/"
+
+    # 2. Скопировать конфиги (без node_modules и uploads и db)
+    - rsync -az --exclude='node_modules' --exclude='server/uploads'
+        --exclude='server/dental.db' --exclude='data'
+        --exclude='dist' --exclude='.git'
+        . "$SSH_USER@$SSH_HOST:$APP_DIR/"
+
+    # 3. На сервере: пересобрать и перезапустить API контейнер
+    - |
+      ssh "$SSH_USER@$SSH_HOST" "
+        set -e
+        cd $APP_DIR
+
+        echo '📦 Установка зависимостей сервера...'
+        cd server && npm ci --only=production && cd ..
+
+        echo '🐳 Пересборка Docker образа API...'
+        docker-compose build --no-cache api
+
+        echo '🔄 Перезапуск контейнеров...'
+        docker-compose up -d --remove-orphans
+
+        echo '🏥 Health check...'
+        sleep 5
+        docker-compose ps
+        curl -sf http://localhost:3001/health && echo '✅ API работает!' || echo '⚠️ API не ответил — проверь логи'
+      "
+  after_script:
+    - echo "📋 Деплой завершён"
+  only:
+    - main
+  when: on_success
