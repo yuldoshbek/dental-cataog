@@ -1,11 +1,11 @@
 /**
  * src/pages/ProductPage.jsx
  *
- * ★ ЭТАЛОННЫЙ ШАБЛОН карточки товара ★
- * На основе этого компонента создаются все остальные карточки.
+ * ★ Карточка товара — загружает данные из API по slug/id
  *
- * Сейчас данные захардкожены (Shining 3D Aoralscan 3 Wireless).
- * После подключения Bitrix: заменить DEMO_PRODUCT на fetch из API.
+ * Для специального эталонного товара (aoralscan3-wireless) используется
+ * детальный формат с группированными характеристиками, преимуществами и т.д.
+ * Остальные товары из каталога отображаются с имеющимися полями.
  *
  * Маршрут: /product/:slug
  */
@@ -15,137 +15,33 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
     ArrowLeft, Copy, Check, ChevronLeft, ChevronRight,
     CheckCircle2, Package, Zap, MessageCircle, Send,
-    ExternalLink, Monitor, Share2,
+    ExternalLink, Monitor, Share2, Loader, AlertCircle,
 } from 'lucide-react';
+import { useProduct } from '../hooks/useProducts.js';
+import { getImageUrl, buildShareUrl, buildWhatsAppUrl } from '../api/index.js';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ЭТАЛОННЫЕ ДАННЫЕ — Shining 3D Aoralscan 3 Wireless
-// Источник: Сканеры.docx (11.03.2026)
-// В продакшене заменить на: const product = await api.get(`/api/products/${slug}`)
-// ─────────────────────────────────────────────────────────────────────────────
-const DEMO_PRODUCT = {
-    id: 'scanner-aoralscan3w',
-    slug: 'shining3d-aoralscan3-wireless',
-
-    category: { id: 'scanners', name: 'Интраоральные сканеры' },
-    brand: 'Shining 3D',
-    model: 'Aoralscan 3 Wireless',
-    country: 'Китай',
-    flag: '🇨🇳',
-
-    short_description:
-        'Инновационный беспроводной интраоральный сканер для создания высококачественных трёхмерных моделей. Точность 6.9 мкм, AI-сканирование, беспроводное подключение Wi-Fi 6.',
-
-    full_description: [
-        'Aoralscan 3 Wireless – инновационный беспроводной интраоральный сканер, предназначенный для создания высококачественных трёхмерных моделей. Обладает большим спектром интеллектуальных функций, обеспечивая эффективную и комфортную работу.',
-        'Беспроводная конструкция создаёт идеальные условия в работе врача, позволяя свободно перемещаться вокруг пациента без ограничения проводом. Высокая точность и скорость сканирования — показатели улучшены на 30% по сравнению со сканерами прошлого поколения.',
-        'Функция AI сканирования автоматически улучшает качество данных и отфильтровывает ненужное, позволяя увеличить скорость работы. Сканирование в режиме реального времени делает процесс эффективнее — пользователь сразу оценивает качество и при необходимости возвращается к непросканированным участкам.',
-        'Дизайн временной коронки и IBT: сканер позволяет разрабатывать и печатать временные коронки не отходя от кресла, а также моделировать лотки с последующей 3D-печатью для точного позиционирования брекетов.',
-    ],
-
-    advantages: [
-        'Беспроводная конструкция — свобода движений, Wi-Fi 6 до 5 метров',
-        'Точность 6.9 мкм — клинически точные 3D-модели',
-        'AI-сканирование — автоматическое улучшение качества данных',
-        'Нагрев наконечника за 40 сек — защита от запотевания',
-        'Автоклавируемый наконечник до 100 раз (121°C / 134°C)',
-        'Три аккумулятора в комплекте — длительная автономная работа',
-        'Дизайн временных коронок прямо у кресла пациента',
-        'Узкий наконечник — комфорт для пациента при сканировании',
-    ],
-
-    applications: [
-        'Общие реставрации и коронки',
-        'Имплантология (full-arch имплантация)',
-        'Ортодонтия и изготовление лотков',
-        'Дизайн и печать временных коронок',
-        'Периодонтологические измерения',
-        'Эстетическая стоматология',
-    ],
-
-    // Характеристики сгруппированы по блокам для удобного отображения
-    specs: [
-        {
-            group: 'Параметры сканирования',
-            rows: [
-                { key: 'Поле сканирования (стандарт)', value: '16 × 12 × 22 мм' },
-                { key: 'Поле сканирования (мини)', value: '12 × 9 × 22 мм' },
-                { key: 'Глубина сканирования', value: 'от −2 до 20 мм от поверхности наконечника' },
-                { key: 'Точность сканирования', value: '6.9 мкм' },
-                { key: 'Принцип работы', value: 'Структурированный свет (бесконтактный)' },
-                { key: 'Форматы файлов', value: 'STL, OBJ, PLY' },
-                { key: 'Искусственный интеллект', value: 'Да' },
-                { key: 'Технология без запотевания', value: 'Да' },
-            ],
-        },
-        {
-            group: 'Подключение и питание',
-            rows: [
-                { key: 'Проводной интерфейс', value: 'USB 3.0' },
-                { key: 'Беспроводное подключение', value: 'Wi-Fi 6 (802.11a/n/ac/ax)' },
-                { key: 'Радиус Wi-Fi', value: 'до 5 метров' },
-                { key: 'Аккумуляторные батареи', value: '3 штуки в комплекте' },
-            ],
-        },
-        {
-            group: 'Конструкция',
-            rows: [
-                { key: 'Вес', value: '330 ± 20 грамм' },
-                { key: 'Нагрев наконечника', value: '40 секунд (антизапотевание)' },
-                { key: 'Стерилизация наконечника', value: 'Автоклав до 100 раз (121°C — 30 мин / 134°C — 4 мин)' },
-            ],
-        },
-    ],
-
-    // Требования к ПК — отдельный блок
-    pc_requirements: [
-        { key: 'Процессор', value: 'Intel Core i7-8700 или выше' },
-        { key: 'Видеокарта', value: 'NVIDIA RTX 2060 6GB или выше' },
-        { key: 'Оперативная память', value: '16 ГБ или больше' },
-        { key: 'Накопитель', value: '256 GB SSD или больше' },
-        { key: 'Монитор', value: '1920 × 1080, 60 Гц или выше' },
-        { key: 'USB-порты', value: '2+ порта USB 3.0 Type-A' },
-        { key: 'Операционная система', value: 'Windows 10 Pro (64-bit) или новее' },
-    ],
-
-    kit_items: [
-        'Aoralscan 3 Wireless — 1 шт.',
-        'Калибратор — 1 шт.',
-        'Держатель для сканера — 1 шт.',
-        'Подставка с функцией зарядки — 1 шт.',
-        'Аккумуляторные батареи — 3 шт.',
-        'Зарядное устройство для батарей — 1 шт.',
-        'Кабель питания — 1 шт.',
-        'Автоклавируемая насадка для взрослых — 4 шт.',
-        'Автоклавируемая насадка для детей — 1 шт.',
-        'Блок питания — 1 шт.',
-        'Модель в прикусе для сканирования — 1 шт.',
-    ],
-
-    price_label: '~ 850 000 – 1 200 000 ₽',
-    price_min: 850000,
-    price_max: 1200000,
-
-    // Фото — пока пусто, отображается плейсхолдер
-    // После загрузки через Админку: [{ url, alt_text, is_primary }, ...]
-    images: [],
-};
+const MANAGER_PHONE = import.meta.env.VITE_WHATSAPP_PHONE ?? '';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // ─────────────────────────────────────────────────────────────────────────────
 function formatPrice(n) {
+    if (!n) return '';
     return new Intl.NumberFormat('ru-RU').format(n) + ' ₽';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// КОМПОНЕНТ: Галерея фотографий
+// КОМПОНЕНТ: Галерея фотографий (работает с форматом API)
 // ─────────────────────────────────────────────────────────────────────────────
 function Gallery({ images, brand, model }) {
     const [active, setActive] = useState(0);
 
-    // Плейсхолдер если нет фото
-    if (!images || images.length === 0) {
+    const normalizedImages = (images ?? []).map(img => ({
+        url: img.url ?? getImageUrl(img.filename),
+        alt: img.alt_text ?? `${brand} ${model}`,
+    }));
+
+    if (normalizedImages.length === 0) {
         return (
             <div className="w-full aspect-[4/3] bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50 rounded-2xl flex flex-col items-center justify-center border border-blue-100">
                 <div className="w-20 h-20 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4">
@@ -153,21 +49,20 @@ function Gallery({ images, brand, model }) {
                 </div>
                 <p className="font-semibold text-slate-600 text-sm">{brand}</p>
                 <p className="text-slate-400 text-xs mt-1">{model}</p>
-                <p className="text-slate-300 text-xs mt-3">Фото будут добавлены через Админку</p>
+                <p className="text-slate-300 text-xs mt-3">Фото добавляются через Админку</p>
             </div>
         );
     }
 
     return (
         <div className="space-y-3">
-            {/* Главное фото */}
             <div className="relative rounded-2xl overflow-hidden bg-gray-100 aspect-[4/3]">
                 <img
-                    src={images[active].url}
-                    alt={images[active].alt_text || `${brand} ${model}`}
+                    src={normalizedImages[active].url}
+                    alt={normalizedImages[active].alt}
                     className="w-full h-full object-cover"
                 />
-                {images.length > 1 && (
+                {normalizedImages.length > 1 && (
                     <>
                         <button
                             onClick={() => setActive(a => Math.max(0, a - 1))}
@@ -177,15 +72,14 @@ function Gallery({ images, brand, model }) {
                             <ChevronLeft size={18} />
                         </button>
                         <button
-                            onClick={() => setActive(a => Math.min(images.length - 1, a + 1))}
-                            disabled={active === images.length - 1}
+                            onClick={() => setActive(a => Math.min(normalizedImages.length - 1, a + 1))}
+                            disabled={active === normalizedImages.length - 1}
                             className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur rounded-full p-2 shadow hover:bg-white transition disabled:opacity-30"
                         >
                             <ChevronRight size={18} />
                         </button>
-                        {/* Точки */}
                         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                            {images.map((_, i) => (
+                            {normalizedImages.map((_, i) => (
                                 <button
                                     key={i}
                                     onClick={() => setActive(i)}
@@ -196,11 +90,9 @@ function Gallery({ images, brand, model }) {
                     </>
                 )}
             </div>
-
-            {/* Миниатюры */}
-            {images.length > 1 && (
+            {normalizedImages.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-1">
-                    {images.map((img, i) => (
+                    {normalizedImages.map((img, i) => (
                         <button
                             key={i}
                             onClick={() => setActive(i)}
@@ -220,7 +112,7 @@ function Gallery({ images, brand, model }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// КОМПОНЕНТ: Таблица характеристик
+// КОМПОНЕНТ: Таблица характеристик (grouped format)
 // ─────────────────────────────────────────────────────────────────────────────
 function SpecsTable({ specs }) {
     return (
@@ -237,22 +129,59 @@ function SpecsTable({ specs }) {
                         {group.rows.map((row, ri) => (
                             <div
                                 key={ri}
-                                className={`flex text-sm border-b border-gray-100 last:border-0 ${
-                                    ri % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'
-                                }`}
+                                className={`flex text-sm border-b border-gray-100 last:border-0 ${ri % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}`}
                             >
-                                <div className="w-2/5 px-4 py-3 text-gray-500 font-medium shrink-0 leading-snug">
-                                    {row.key}
-                                </div>
-                                <div className="flex-1 px-4 py-3 text-gray-900 font-semibold leading-snug">
-                                    {row.value}
-                                </div>
+                                <div className="w-2/5 px-4 py-3 text-gray-500 font-medium shrink-0 leading-snug">{row.key}</div>
+                                <div className="flex-1 px-4 py-3 text-gray-900 font-semibold leading-snug">{row.value}</div>
                             </div>
                         ))}
                     </div>
                 </div>
             ))}
         </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// КОМПОНЕНТ: Текстовые характеристики (flat format из API)
+// ─────────────────────────────────────────────────────────────────────────────
+function SpecsFlat({ product }) {
+    const rows = [
+        product.specs && { key: 'Технические характеристики', value: product.specs },
+        product.type && { key: 'Тип', value: product.type },
+        product.forUnits && { key: 'Для установок', value: product.forUnits },
+        product.dryer && { key: 'Осушитель', value: product.dryer },
+        product.cover && { key: 'Кожух', value: product.cover },
+        product.cylinders && { key: 'Цилиндров', value: product.cylinders },
+        product.dimensions && { key: 'Габариты и вес', value: product.dimensions },
+        product.upholstery && { key: 'Материал обивки', value: product.upholstery },
+        product.colors && { key: 'Цветовые решения', value: product.colors },
+    ].filter(Boolean);
+
+    if (rows.length === 0) {
+        return <p className="text-sm text-gray-400">Характеристики не указаны.</p>;
+    }
+
+    return (
+        <div className="rounded-xl border border-gray-200 overflow-hidden">
+            {rows.map((row, ri) => (
+                <div key={ri} className={`flex text-sm border-b border-gray-100 last:border-0 ${ri % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}`}>
+                    <div className="w-2/5 px-4 py-3 text-gray-500 font-medium shrink-0 leading-snug">{row.key}</div>
+                    <div className="flex-1 px-4 py-3 text-gray-900 font-semibold leading-snug">{row.value}</div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Вспомогательный компонент заголовка раздела
+// ─────────────────────────────────────────────────────────────────────────────
+function SectionTitle({ children }) {
+    return (
+        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            {children}
+        </h3>
     );
 }
 
@@ -272,11 +201,34 @@ export default function ProductPage() {
     const [activeTab, setActiveTab] = useState('description');
     const [copied, setCopied] = useState(false);
 
-    // TODO: заменить на реальный fetch после подключения API
-    // const { product, loading, error } = useProduct(slug);
-    const product = DEMO_PRODUCT;
+    const { product, loading, error } = useProduct(slug);
 
-    const shareUrl = `${window.location.origin}/share/${product.slug}`;
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <Loader size={36} className="animate-spin text-blue-500" />
+            </div>
+        );
+    }
+
+    if (error || !product) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+                <div className="text-center">
+                    <AlertCircle size={48} className="text-red-400 mx-auto mb-3" />
+                    <h2 className="text-lg font-bold text-gray-800 mb-1">Товар не найден</h2>
+                    <p className="text-sm text-gray-500 mb-4">{error ?? 'Проверьте ссылку или вернитесь в каталог.'}</p>
+                    <button onClick={() => navigate('/')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
+                        В каталог
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Определяем формат данных: rich (DEMO) или flat (API)
+    const isRich = Array.isArray(product.full_description) || Array.isArray(product.advantages);
+    const shareUrl = buildShareUrl(product.shareSlug ?? product.id);
 
     function handleCopy() {
         navigator.clipboard.writeText(shareUrl).then(() => {
@@ -286,17 +238,29 @@ export default function ProductPage() {
     }
 
     function handleWhatsApp() {
-        const text = encodeURIComponent(
-            `*${product.brand} ${product.model}*\n${product.short_description}\n\nЦена: ${product.price_label}\n\n${shareUrl}`
-        );
-        window.open(`https://wa.me/?text=${text}`, '_blank');
+        const name = `${product.brand} ${product.model}`;
+        const price = product.price_label ?? product.price ?? '';
+        const text = `*${name}*\n${product.short_description ?? product.description ?? ''}\n\nЦена: ${price}\n\n${shareUrl}`;
+        if (MANAGER_PHONE) {
+            window.open(buildWhatsAppUrl(MANAGER_PHONE, text), '_blank');
+        } else {
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        }
     }
 
     function handleTelegram() {
-        const text = encodeURIComponent(`${product.brand} ${product.model} — ${product.price_label}`);
+        const name = `${product.brand} ${product.model}`;
+        const price = product.price_label ?? product.price ?? '';
+        const text = encodeURIComponent(`${name} — ${price}`);
         const url = encodeURIComponent(shareUrl);
         window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
     }
+
+    const priceLabel = product.price_label ?? product.price ?? '';
+    const priceMin = product.price_min ?? product.priceGradation?.min;
+    const priceMax = product.price_max ?? product.priceGradation?.max;
+    const categoryName = product.category?.name ?? product.categoryId ?? '';
+    const flag = product.flag ?? '';
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -312,14 +276,17 @@ export default function ProductPage() {
                         <span className="hidden sm:inline">Каталог</span>
                     </button>
                     <span className="text-gray-200">/</span>
-                    <span className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-medium shrink-0">
-                        {product.category.name}
-                    </span>
-                    <span className="text-gray-200 hidden sm:block">/</span>
+                    {categoryName && (
+                        <>
+                            <span className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-medium shrink-0">
+                                {categoryName}
+                            </span>
+                            <span className="text-gray-200 hidden sm:block">/</span>
+                        </>
+                    )}
                     <span className="text-sm text-gray-700 font-medium truncate hidden sm:block">
                         {product.brand} {product.model}
                     </span>
-                    {/* Share кнопка справа */}
                     <div className="ml-auto">
                         <button
                             onClick={handleCopy}
@@ -352,10 +319,14 @@ export default function ProductPage() {
                             <span className="text-xs font-black uppercase tracking-widest text-blue-600">
                                 {product.brand}
                             </span>
-                            <span className="text-gray-300">·</span>
-                            <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full">
-                                {product.category.name}
-                            </span>
+                            {categoryName && (
+                                <>
+                                    <span className="text-gray-300">·</span>
+                                    <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full">
+                                        {categoryName}
+                                    </span>
+                                </>
+                            )}
                         </div>
 
                         {/* Название */}
@@ -365,7 +336,7 @@ export default function ProductPage() {
 
                         {/* Страна */}
                         <div className="flex items-center gap-2">
-                            <span className="text-xl">{product.flag}</span>
+                            {flag && <span className="text-xl">{flag}</span>}
                             <span className="text-sm text-gray-500">
                                 Производство: <span className="font-semibold text-gray-700">{product.country}</span>
                             </span>
@@ -373,33 +344,40 @@ export default function ProductPage() {
 
                         {/* Цена */}
                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
-                            <p className="text-2xl font-bold text-gray-900">{product.price_label}</p>
-                            {product.price_min && product.price_max && (
+                            <p className="text-2xl font-bold text-gray-900">{priceLabel}</p>
+                            {priceMin && priceMax && (
                                 <p className="text-sm text-gray-500 mt-1">
-                                    от {formatPrice(product.price_min)} &nbsp;—&nbsp; до {formatPrice(product.price_max)}
+                                    от {formatPrice(priceMin)} &nbsp;—&nbsp; до {formatPrice(priceMax)}
                                 </p>
                             )}
                         </div>
 
-                        {/* Топ-4 преимущества */}
-                        <div className="space-y-2.5">
-                            {product.advantages.slice(0, 4).map((adv, i) => (
-                                <div key={i} className="flex items-start gap-2.5">
-                                    <CheckCircle2 size={16} className="text-green-500 mt-0.5 shrink-0" />
-                                    <span className="text-sm text-gray-700 leading-snug">{adv}</span>
-                                </div>
-                            ))}
-                            {product.advantages.length > 4 && (
-                                <button
-                                    onClick={() => setActiveTab('description')}
-                                    className="text-xs text-blue-500 hover:underline ml-[26px]"
-                                >
-                                    + ещё {product.advantages.length - 4} преимуществ →
-                                </button>
-                            )}
-                        </div>
+                        {/* Преимущества (rich format) */}
+                        {isRich && Array.isArray(product.advantages) && product.advantages.length > 0 && (
+                            <div className="space-y-2.5">
+                                {product.advantages.slice(0, 4).map((adv, i) => (
+                                    <div key={i} className="flex items-start gap-2.5">
+                                        <CheckCircle2 size={16} className="text-green-500 mt-0.5 shrink-0" />
+                                        <span className="text-sm text-gray-700 leading-snug">{adv}</span>
+                                    </div>
+                                ))}
+                                {product.advantages.length > 4 && (
+                                    <button
+                                        onClick={() => setActiveTab('description')}
+                                        className="text-xs text-blue-500 hover:underline ml-[26px]"
+                                    >
+                                        + ещё {product.advantages.length - 4} преимуществ →
+                                    </button>
+                                )}
+                            </div>
+                        )}
 
-                        {/* ── КНОПКИ SHARE ─── */}
+                        {/* Краткое описание (flat format) */}
+                        {!isRich && product.description && (
+                            <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
+                        )}
+
+                        {/* Кнопки Share */}
                         <div className="pt-1 space-y-3">
                             <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
                                 Отправить клиенту
@@ -409,10 +387,7 @@ export default function ProductPage() {
                                     onClick={handleCopy}
                                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition-all shadow-sm hover:shadow"
                                 >
-                                    {copied
-                                        ? <Check size={15} className="text-green-500" />
-                                        : <Copy size={15} />
-                                    }
+                                    {copied ? <Check size={15} className="text-green-500" /> : <Copy size={15} />}
                                     {copied ? 'Скопировано!' : 'Копировать ссылку'}
                                 </button>
                                 <button
@@ -424,14 +399,12 @@ export default function ProductPage() {
                                 </button>
                                 <button
                                     onClick={handleTelegram}
-                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2AABEE] hover:bg-[#1f9bd6] text-white text-sm font-medium transition-all shadow-sm hover:shadow"
+                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2AABEE] hover:bg-[#1f9bd6] text-white text-sm font-medium transition-all"
                                 >
                                     <Send size={15} />
                                     Telegram
                                 </button>
                             </div>
-
-                            {/* Превью ссылки */}
                             <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
                                 <ExternalLink size={12} className="text-gray-300 shrink-0" />
                                 <span className="text-xs text-gray-400 truncate font-mono">{shareUrl}</span>
@@ -442,8 +415,6 @@ export default function ProductPage() {
 
                 {/* ── ВКЛАДКИ ────────────────────────────────────────────────── */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-
-                    {/* Навигация вкладок */}
                     <div className="flex border-b border-gray-100 overflow-x-auto">
                         {TABS.map(tab => (
                             <button
@@ -460,45 +431,50 @@ export default function ProductPage() {
                         ))}
                     </div>
 
-                    {/* Содержимое вкладок */}
                     <div className="p-5 sm:p-7">
 
                         {/* ─── ОПИСАНИЕ ─── */}
                         {activeTab === 'description' && (
                             <div className="space-y-8">
-
-                                {/* Текст */}
                                 <div>
                                     <SectionTitle>О товаре</SectionTitle>
                                     <div className="space-y-4 mt-4">
-                                        {product.full_description.map((para, i) => (
-                                            <p key={i} className="text-gray-700 leading-relaxed">{para}</p>
-                                        ))}
+                                        {isRich && Array.isArray(product.full_description)
+                                            ? product.full_description.map((para, i) => (
+                                                <p key={i} className="text-gray-700 leading-relaxed">{para}</p>
+                                              ))
+                                            : <p className="text-gray-700 leading-relaxed">
+                                                {product.clientDescription || product.description || 'Описание не указано.'}
+                                              </p>
+                                        }
                                     </div>
                                 </div>
 
-                                {/* Все преимущества */}
-                                <div>
-                                    <SectionTitle>Преимущества</SectionTitle>
-                                    <div className="grid sm:grid-cols-2 gap-3 mt-4">
-                                        {product.advantages.map((adv, i) => (
-                                            <div key={i} className="flex items-start gap-3 bg-green-50 border border-green-100 rounded-xl px-4 py-3">
-                                                <CheckCircle2 size={15} className="text-green-500 mt-0.5 shrink-0" />
-                                                <span className="text-sm text-gray-700 leading-snug">{adv}</span>
-                                            </div>
-                                        ))}
+                                {isRich && Array.isArray(product.advantages) && product.advantages.length > 0 && (
+                                    <div>
+                                        <SectionTitle>Преимущества</SectionTitle>
+                                        <div className="grid sm:grid-cols-2 gap-3 mt-4">
+                                            {product.advantages.map((adv, i) => (
+                                                <div key={i} className="flex items-start gap-3 bg-green-50 border border-green-100 rounded-xl px-4 py-3">
+                                                    <CheckCircle2 size={15} className="text-green-500 mt-0.5 shrink-0" />
+                                                    <span className="text-sm text-gray-700 leading-snug">{adv}</span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         )}
 
                         {/* ─── ХАРАКТЕРИСТИКИ ─── */}
                         {activeTab === 'specs' && (
                             <div className="space-y-8">
-                                <SpecsTable specs={product.specs} />
+                                {isRich && Array.isArray(product.specs)
+                                    ? <SpecsTable specs={product.specs} />
+                                    : <SpecsFlat product={product} />
+                                }
 
-                                {/* Требования к ПК */}
-                                {product.pc_requirements?.length > 0 && (
+                                {isRich && Array.isArray(product.pc_requirements) && product.pc_requirements.length > 0 && (
                                     <div>
                                         <div className="flex items-center gap-2 mb-3">
                                             <Monitor size={14} className="text-blue-500" />
@@ -508,10 +484,7 @@ export default function ProductPage() {
                                         </div>
                                         <div className="rounded-xl border border-gray-200 overflow-hidden">
                                             {product.pc_requirements.map((row, ri) => (
-                                                <div
-                                                    key={ri}
-                                                    className={`flex text-sm border-b border-gray-100 last:border-0 ${ri % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}`}
-                                                >
+                                                <div key={ri} className={`flex text-sm border-b border-gray-100 last:border-0 ${ri % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}`}>
                                                     <div className="w-2/5 px-4 py-3 text-gray-500 font-medium shrink-0">{row.key}</div>
                                                     <div className="flex-1 px-4 py-3 text-gray-900 font-semibold">{row.value}</div>
                                                 </div>
@@ -526,14 +499,19 @@ export default function ProductPage() {
                         {activeTab === 'applications' && (
                             <div>
                                 <SectionTitle>Области применения</SectionTitle>
-                                <div className="grid sm:grid-cols-2 gap-3 mt-4">
-                                    {product.applications.map((app, i) => (
-                                        <div key={i} className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
-                                            <Zap size={14} className="text-blue-500 shrink-0" />
-                                            <span className="text-sm text-gray-700 font-medium">{app}</span>
+                                {isRich && Array.isArray(product.applications) && product.applications.length > 0
+                                    ? (
+                                        <div className="grid sm:grid-cols-2 gap-3 mt-4">
+                                            {product.applications.map((app, i) => (
+                                                <div key={i} className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                                                    <Zap size={14} className="text-blue-500 shrink-0" />
+                                                    <span className="text-sm text-gray-700 font-medium">{app}</span>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    )
+                                    : <p className="text-sm text-gray-400 mt-3">Области применения не указаны.</p>
+                                }
                             </div>
                         )}
 
@@ -541,20 +519,29 @@ export default function ProductPage() {
                         {activeTab === 'kit' && (
                             <div>
                                 <SectionTitle>Комплектация поставки</SectionTitle>
-                                <div className="mt-4 rounded-xl border border-gray-200 overflow-hidden">
-                                    {product.kit_items.map((item, i) => (
-                                        <div
-                                            key={i}
-                                            className={`flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-0 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}`}
-                                        >
-                                            <span className="text-xs font-bold text-gray-300 w-5 text-right shrink-0">
-                                                {i + 1}
-                                            </span>
-                                            <Package size={13} className="text-gray-400 shrink-0" />
-                                            <span className="text-sm text-gray-700">{item}</span>
-                                        </div>
-                                    ))}
-                                </div>
+                                {product.baseConfig && (
+                                    <p className="text-sm text-gray-700 mt-3 leading-relaxed">{product.baseConfig}</p>
+                                )}
+                                {product.options && (
+                                    <div className="mt-3 p-4 bg-amber-50 border border-amber-100 rounded-xl">
+                                        <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-1">Дополнительные опции</p>
+                                        <p className="text-sm text-gray-700">{product.options}</p>
+                                    </div>
+                                )}
+                                {isRich && Array.isArray(product.kit_items) && product.kit_items.length > 0 && (
+                                    <div className="mt-4 rounded-xl border border-gray-200 overflow-hidden">
+                                        {product.kit_items.map((item, i) => (
+                                            <div key={i} className={`flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-0 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}`}>
+                                                <span className="text-xs font-bold text-gray-300 w-5 text-right shrink-0">{i + 1}</span>
+                                                <Package size={13} className="text-gray-400 shrink-0" />
+                                                <span className="text-sm text-gray-700">{item}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {!product.baseConfig && !product.options && !(isRich && product.kit_items?.length > 0) && (
+                                    <p className="text-sm text-gray-400 mt-3">Комплектация не указана.</p>
+                                )}
                             </div>
                         )}
                     </div>
@@ -601,14 +588,5 @@ export default function ProductPage() {
 
             </div>
         </div>
-    );
-}
-
-// ─── Вспомогательный компонент заголовка раздела ──────────────────────────────
-function SectionTitle({ children }) {
-    return (
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-            {children}
-        </h3>
     );
 }

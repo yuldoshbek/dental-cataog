@@ -83,8 +83,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
 
 // ─── API Маршруты ─────────────────────────────────────────────────────────────
 app.use('/api/auth', authLimiter, authRouter);
-app.use('/api', productsRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api', productsRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
