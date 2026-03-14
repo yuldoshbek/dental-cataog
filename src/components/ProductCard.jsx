@@ -23,13 +23,13 @@ export default function ProductCard({ product, setSelectedProduct }) {
   const categoryId = product.categoryId ?? product.category_id;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-blue-200 transition-all duration-200 group flex flex-col">
+    <div
+      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-blue-200 transition-all duration-200 group flex flex-col cursor-pointer"
+      onClick={() => setSelectedProduct(product)}
+    >
 
       {/* Изображение */}
-      <div
-        className="relative aspect-[16/10] bg-gradient-to-br from-slate-50 to-blue-50/40 overflow-hidden cursor-pointer"
-        onClick={() => setSelectedProduct(product)}
-      >
+      <div className="relative aspect-[16/10] bg-gradient-to-br from-slate-50 to-blue-50/40 overflow-hidden">
         {primaryImg ? (
           <img
             src={getImageUrl(primaryImg.filename)}
@@ -52,7 +52,7 @@ export default function ProductCard({ product, setSelectedProduct }) {
       <div className="p-4 flex-1 flex flex-col">
 
         {/* Бренд + модель */}
-        <div className="mb-2 cursor-pointer" onClick={() => setSelectedProduct(product)}>
+        <div className="mb-2">
           <p className="text-[11px] font-bold text-blue-500 uppercase tracking-widest mb-0.5">
             {product.brand}
           </p>
@@ -74,7 +74,7 @@ export default function ProductCard({ product, setSelectedProduct }) {
         {/* Кнопки действий */}
         <div className="flex items-stretch gap-1.5 border-t border-gray-50 pt-3">
           <button
-            onClick={() => setSelectedProduct(product)}
+            onClick={e => { e.stopPropagation(); setSelectedProduct(product); }}
             className="flex-1 flex items-center justify-center gap-1 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
           >
             Кратко <ChevronRight size={14} />

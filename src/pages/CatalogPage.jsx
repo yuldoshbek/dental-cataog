@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Info, X, SlidersHorizontal } from 'lucide-react';
+import { Search, Info, X } from 'lucide-react';
 import {
   Stethoscope, Wind, Thermometer, Activity,
   ScanFace, Camera, Monitor, Zap, Package
@@ -81,7 +81,7 @@ export default function CatalogPage() {
         setSearchQuery={setSearchQuery}
       />
 
-      <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <main className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
 
         {/* ── HEADER ── */}
         <header className="bg-white border-b border-gray-200 shrink-0 z-10">

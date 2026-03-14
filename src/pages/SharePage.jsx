@@ -7,7 +7,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-    CheckCircle, MessageCircle, Phone, Send, X, Loader, AlertCircle, Share2,
+    CheckCircle, MessageCircle, Send, X, Loader, AlertCircle, Share2,
     ChevronLeft, ChevronRight, CheckCircle2
 } from 'lucide-react';
 import { useSharedProduct } from '../hooks/useProducts.js';
