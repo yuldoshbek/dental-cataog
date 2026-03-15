@@ -1,6 +1,6 @@
 ﻿import db from '../db.js';
-import { createBitrixCatalogRepository } from '../../catalog/bitrixCatalogRepository.js';
-import { getCatalogProviderFromEnv } from '../../catalog/bitrixConfig.js';
+import { createBitrixCatalogRepository } from './bitrixCatalogRepository.js';
+import { getCatalogProviderFromEnv } from './bitrixConfig.js';
 import { createServerInquiryStore } from './inquiryStore.js';
 import { createLocalCatalogRepository } from './localCatalogRepository.js';
 

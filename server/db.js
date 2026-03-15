@@ -71,6 +71,13 @@ db.exec(`
     sort_order  INTEGER DEFAULT 0
   );
 
+  -- Индексы для быстрой фильтрации и JOIN
+  CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
+  CREATE INDEX IF NOT EXISTS idx_products_active   ON products(is_active);
+  CREATE INDEX IF NOT EXISTS idx_images_product    ON product_images(product_id);
+  CREATE INDEX IF NOT EXISTS idx_summaries_cat     ON category_summaries(category_id);
+  CREATE INDEX IF NOT EXISTS idx_inquiries_product ON client_inquiries(product_id);
+
   CREATE TABLE IF NOT EXISTS client_inquiries (
     id           TEXT PRIMARY KEY,
     product_id   TEXT NOT NULL REFERENCES products(id),

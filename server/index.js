@@ -41,6 +41,10 @@ if (!process.env.JWT_SECRET || WEAK_SECRETS.includes(process.env.JWT_SECRET)) {
     }
     console.warn('⚠️  JWT_SECRET небезопасен. Смените перед деплоем.');
 }
+if (!process.env.ADMIN_USERNAME) {
+    console.error('❌ FATAL: ADMIN_USERNAME не задан в .env');
+    process.exit(1);
+}
 if (!process.env.ADMIN_PASSWORD) {
     console.error('❌ FATAL: ADMIN_PASSWORD не задан в .env');
     process.exit(1);
@@ -83,6 +87,7 @@ const globalLimiter = rateLimit({
     legacyHeaders: false,
 });
 app.use(globalLimiter);
+
 
 // ─── Request logging ───────────────────────────────────────────────────────────
 // В production: stdout → PM2 → /var/log/dental-catalog/out.log

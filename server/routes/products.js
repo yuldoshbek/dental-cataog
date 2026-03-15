@@ -3,8 +3,18 @@
  */
 
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { requireAuth } from '../middleware/auth.js';
 import { getCatalogRepository } from '../catalog/index.js';
+
+// Лимит для публичных форм: 10 заявок в минуту на IP
+const inquiryLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: 'Слишком много заявок. Подождите минуту.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const router = Router();
 const catalog = getCatalogRepository();
@@ -58,7 +68,7 @@ router.delete('/products/:id', requireAuth, asyncRoute(async (req, res) => {
   res.json(await catalog.deleteProduct(req.params.id));
 }));
 
-router.post('/inquiries', asyncRoute(async (req, res) => {
+router.post('/inquiries', inquiryLimiter, asyncRoute(async (req, res) => {
   const result = await catalog.submitInquiry(req.body, { ipAddress: req.ip });
   res.status(201).json(result);
 }));
