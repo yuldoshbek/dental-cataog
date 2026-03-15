@@ -7,6 +7,7 @@
  * - CORS ограничен доменом из .env (в prod)
  * - Статика /uploads — только для изображений
  * - Graceful shutdown перехватывает SIGTERM/SIGINT
+ * - process.send('ready') — сигнал PM2 wait_ready
  */
 
 import 'dotenv/config';
@@ -31,12 +32,28 @@ const PORT = process.env.PORT ?? 3001;
 const isDev = process.env.NODE_ENV !== 'production';
 const catalogProvider = getCatalogProviderInfo();
 
-// ─── Security ────────────────────────────────────────────────────────────────
+// ─── Startup validation ────────────────────────────────────────────────────────
+const WEAK_SECRETS = ['change_me_to_random_32_char_string', 'demo-secret-key-change-in-production', ''];
+if (!process.env.JWT_SECRET || WEAK_SECRETS.includes(process.env.JWT_SECRET)) {
+    if (!isDev) {
+        console.error('❌ FATAL: JWT_SECRET не задан или небезопасен. Запуск в production невозможен.');
+        process.exit(1);
+    }
+    console.warn('⚠️  JWT_SECRET небезопасен. Смените перед деплоем.');
+}
+if (!process.env.ADMIN_PASSWORD) {
+    console.error('❌ FATAL: ADMIN_PASSWORD не задан в .env');
+    process.exit(1);
+}
+
+// ─── Security ─────────────────────────────────────────────────────────────────
 app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' }, // для изображений
 }));
 
-// ─── CORS ─────────────────────────────────────────────────────────────────────
+// ─── CORS ──────────────────────────────────────────────────────────────────────
+// Если CORS_ORIGIN не задан в production — API доступен только с того же домена
+// (nginx проксирует /api/ на 127.0.0.1:3001, CORS не нужен)
 const corsOrigin = process.env.CORS_ORIGIN ?? (isDev ? 'http://localhost:5173' : false);
 app.use(cors({
     origin: corsOrigin,
@@ -44,12 +61,12 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// ─── Body Parsing ─────────────────────────────────────────────────────────────
+// ─── Body Parsing ──────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: false }));
 
-// ─── Rate Limiting ───────────────────────────────────────────────────────────
-// На auth — строже (5 попыток в минуту)
+// ─── Rate Limiting ────────────────────────────────────────────────────────────
+// Auth: строже — 5 попыток в минуту на IP
 const authLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 5,
@@ -58,7 +75,7 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// Общий лимит (120 запросов в минуту на IP)
+// Общий лимит: 120 запросов в минуту на IP
 const globalLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 120,
@@ -67,21 +84,30 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// ─── Request logging (только dev) ────────────────────────────────────────────
-if (isDev) {
-    app.use((req, _res, next) => {
-        console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-        next();
+// ─── Request logging ───────────────────────────────────────────────────────────
+// В production: stdout → PM2 → /var/log/dental-catalog/out.log
+// Логируем только ошибки (4xx/5xx) + все запросы в dev
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const ms = Date.now() - start;
+        const line = `${new Date().toISOString()} ${req.method} ${req.path} ${res.statusCode} ${ms}ms`;
+        if (res.statusCode >= 500) {
+            console.error(line);
+        } else if (isDev || res.statusCode >= 400) {
+            console.log(line);
+        }
     });
-}
+    next();
+});
 
-// ─── Статика: uploads ────────────────────────────────────────────────────────
+// ─── Статика: uploads ─────────────────────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
     maxAge: '30d',
     immutable: false,
 }));
 
-// ─── API Маршруты ─────────────────────────────────────────────────────────────
+// ─── API Маршруты ──────────────────────────────────────────────────────────────
 app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api', productsRouter);
@@ -103,47 +129,35 @@ app.use((_req, res) => {
 
 // ─── Global error handler ─────────────────────────────────────────────────────
 app.use((err, _req, res, _next) => {
-    console.error('❌ Необработанная ошибка:', err.message);
+    console.error(`${new Date().toISOString()} ERROR:`, err.message, err.stack ?? '');
     if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(413).json({ error: `Файл слишком большой. Максимум ${process.env.MAX_FILE_SIZE_MB ?? 10}MB.` });
     }
-    res.status(500).json({ error: isDev ? err.message : 'Внутренняя ошибка сервера.' });
+    res.status(err.status ?? 500).json({ error: isDev ? err.message : 'Внутренняя ошибка сервера.' });
 });
-
-// ─── Startup validation ───────────────────────────────────────────────────────
-const WEAK_SECRETS = ['change_me_to_random_32_char_string', 'demo-secret-key-change-in-production', ''];
-if (!process.env.JWT_SECRET || WEAK_SECRETS.includes(process.env.JWT_SECRET)) {
-    if (!isDev) {
-        console.error('❌ FATAL: JWT_SECRET не задан или содержит небезопасное значение по умолчанию. Запуск в production невозможен.');
-        process.exit(1);
-    }
-    console.warn('⚠️  JWT_SECRET содержит небезопасное значение. Смените перед деплоем в production.');
-}
-if (!process.env.ADMIN_PASSWORD) {
-    console.error('❌ FATAL: ADMIN_PASSWORD не задан в .env');
-    process.exit(1);
-}
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 const server = app.listen(PORT, () => {
-    console.log(`✅ Dental Catalog API запущен на порту ${PORT} [${process.env.NODE_ENV ?? 'development'}]`);
-    console.log(`   Uploads: ${path.join(__dirname, 'uploads')}`);
+    console.log(`${new Date().toISOString()} ✅ Dental Catalog API :${PORT} [${process.env.NODE_ENV ?? 'development'}]`);
     console.log(`   Catalog: ${catalogProvider.provider} (${catalogProvider.source})`);
     if (isDev) console.log(`   API:     http://localhost:${PORT}/api/products`);
+
+    // Сигнал PM2: процесс готов (нужен при wait_ready: true в ecosystem.config.js)
+    process.send?.('ready');
 });
 
 // ─── Graceful shutdown ────────────────────────────────────────────────────────
 function gracefulShutdown(signal) {
-    console.log(`\n${signal} получен. Завершение сервера...`);
+    console.log(`${new Date().toISOString()} ${signal} — завершение сервера...`);
     server.close(() => {
-        console.log('Сервер остановлен. До свидания!');
+        console.log(`${new Date().toISOString()} Сервер остановлен.`);
         process.exit(0);
     });
     setTimeout(() => {
-        console.error('Принудительный выход.');
+        console.error(`${new Date().toISOString()} Принудительный выход.`);
         process.exit(1);
     }, 10_000);
 }
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
