@@ -59,7 +59,7 @@ export default function SharePage() {
         alt: `${product.brand} ${product.model}`,
     }));
     const price             = product.price ?? product.price_label;
-    const hasPriceGradation = product.price_min || product.price_avg || product.price_max;
+    const hasPriceGradation = product.priceGradation?.min || product.priceGradation?.avg || product.priceGradation?.max;
     const ogDesc            = product.short_description ?? product.description ?? `${product.brand} ${product.model}`;
     const ogImage           = images[0]?.url ?? '';
 
@@ -160,9 +160,9 @@ export default function SharePage() {
                     {hasPriceGradation ? (
                         <div className="grid grid-cols-3 gap-2 text-center">
                             {[
-                                { label: 'Мин.',    val: product.price_min, accent: false },
-                                { label: 'Средняя', val: product.price_avg, accent: true  },
-                                { label: 'Макс.',   val: product.price_max, accent: false },
+                                { label: 'Мин.',    val: product.priceGradation?.min, accent: false },
+                                { label: 'Средняя', val: product.priceGradation?.avg, accent: true  },
+                                { label: 'Макс.',   val: product.priceGradation?.max, accent: false },
                             ].map(({ label, val, accent }) => (
                                 <div
                                     key={label}

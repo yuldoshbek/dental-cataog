@@ -37,15 +37,15 @@ export function applyFilters(products, { countries, sortBy }) {
             break;
         case 'price_asc':
             result.sort((a, b) => {
-                const pa = parsePrice(a.price_min ?? a.price_label ?? a.price);
-                const pb = parsePrice(b.price_min ?? b.price_label ?? b.price);
+                const pa = parsePrice(a.priceGradation?.min ?? a.price);
+                const pb = parsePrice(b.priceGradation?.min ?? b.price);
                 return pa - pb;
             });
             break;
         case 'price_desc':
             result.sort((a, b) => {
-                const pa = parsePrice(a.price_min ?? a.price_label ?? a.price);
-                const pb = parsePrice(b.price_min ?? b.price_label ?? b.price);
+                const pa = parsePrice(a.priceGradation?.min ?? a.price);
+                const pb = parsePrice(b.priceGradation?.min ?? b.price);
                 return pb - pa;
             });
             break;

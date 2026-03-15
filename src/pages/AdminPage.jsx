@@ -386,7 +386,7 @@ export default function AdminPage() {
                                             {/* Actions */}
                                             <div className="flex flex-col sm:flex-row items-center gap-1 shrink-0">
                                                 <Link
-                                                    to={`/product/${product.slug ?? product.id}`}
+                                                    to={`/product/${product.shareSlug ?? product.id}`}
                                                     target="_blank"
                                                     className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                                                     title="Просмотр"
