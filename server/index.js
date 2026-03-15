@@ -110,6 +110,20 @@ app.use((err, _req, res, _next) => {
     res.status(500).json({ error: isDev ? err.message : 'Внутренняя ошибка сервера.' });
 });
 
+// ─── Startup validation ───────────────────────────────────────────────────────
+const WEAK_SECRETS = ['change_me_to_random_32_char_string', 'demo-secret-key-change-in-production', ''];
+if (!process.env.JWT_SECRET || WEAK_SECRETS.includes(process.env.JWT_SECRET)) {
+    if (!isDev) {
+        console.error('❌ FATAL: JWT_SECRET не задан или содержит небезопасное значение по умолчанию. Запуск в production невозможен.');
+        process.exit(1);
+    }
+    console.warn('⚠️  JWT_SECRET содержит небезопасное значение. Смените перед деплоем в production.');
+}
+if (!process.env.ADMIN_PASSWORD) {
+    console.error('❌ FATAL: ADMIN_PASSWORD не задан в .env');
+    process.exit(1);
+}
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 const server = app.listen(PORT, () => {
     console.log(`✅ Dental Catalog API запущен на порту ${PORT} [${process.env.NODE_ENV ?? 'development'}]`);

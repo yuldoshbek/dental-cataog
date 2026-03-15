@@ -80,16 +80,14 @@ router.post('/:productId', requireAuth, ensureLocalCatalogWrite, upload.array('i
   return res.status(201).json({ uploaded: savedImages.length, images: savedImages });
 });
 
-router.delete('/:imageId', requireAuth, ensureLocalCatalogWrite, (req, res) => {
+router.delete('/:imageId', requireAuth, ensureLocalCatalogWrite, async (req, res) => {
   const row = db.prepare('SELECT * FROM product_images WHERE id = ?').get(req.params.imageId);
   if (!row) {
     return res.status(404).json({ error: 'Изображение не найдено.' });
   }
 
   const filePath = path.join(UPLOADS_DIR, row.filename);
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
-  }
+  await fs.promises.unlink(filePath).catch(() => {});
   db.prepare('DELETE FROM product_images WHERE id = ?').run(row.id);
 
   if (row.is_primary) {

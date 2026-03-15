@@ -9,6 +9,8 @@
 // Для локальной разработки Vite проксирует /api → localhost:3001
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
+const REQUEST_TIMEOUT_MS = 15_000;
+
 // ─── HTTP Helper ──────────────────────────────────────────────────────────────
 
 async function request(path, options = {}) {
@@ -19,10 +21,26 @@ async function request(path, options = {}) {
         ...options.headers,
     };
 
-    const res = await fetch(`${BASE_URL}${path}`, {
-        ...options,
-        headers,
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    let res;
+    try {
+        res = await fetch(`${BASE_URL}${path}`, {
+            ...options,
+            headers,
+            signal: controller.signal,
+        });
+    } catch (err) {
+        if (err.name === 'AbortError') {
+            const timeout = new Error('Сервер не отвечает. Проверьте соединение.');
+            timeout.status = 408;
+            throw timeout;
+        }
+        throw err;
+    } finally {
+        clearTimeout(timer);
+    }
 
     if (!res.ok) {
         const data = await res.json().catch(() => ({}));
