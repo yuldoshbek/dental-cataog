@@ -20,7 +20,7 @@ const SORT_OPTIONS = [
 export function extractCountries(products) {
     const set = new Set();
     products.forEach(p => { if (p.country) set.add(p.country); });
-    return [...set].sort();
+    return [...set].sort((a, b) => a.localeCompare(b, 'ru'));
 }
 
 /* ─── Утилита: применить фильтры и сортировку ──────────────────── */

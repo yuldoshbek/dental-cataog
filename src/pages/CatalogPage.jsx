@@ -5,8 +5,8 @@
  * Mobile: sticky header + category pills + filter bar + grid.
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, Info, X, Package, SlidersHorizontal } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Search, Info, X, Package } from 'lucide-react';
 import useDebounce from '../hooks/useDebounce.js';
 import {
     Stethoscope, Wind, Thermometer, Activity,
@@ -77,12 +77,12 @@ export default function CatalogPage() {
     }, [searchQuery]);
 
     // Сбрасываем фильтры при смене категории
-    function handleCategoryChange(id) {
+    const handleCategoryChange = useCallback((id) => {
         setActiveCategory(id);
         setSelectedProduct(null);
         setSearchQuery('');
         setFilters(EMPTY_FILTERS);
-    }
+    }, []);
 
     // Debounce 300ms — API запрос только после паузы в наборе
     const debouncedSearch = useDebounce(searchQuery, 300);

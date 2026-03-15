@@ -57,7 +57,6 @@ export function useSharedProduct(slug) {
 
     useEffect(() => {
         if (!slug) return;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(true);
         productsApi.getShared(slug)
             .then(setProduct)

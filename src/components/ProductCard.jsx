@@ -25,9 +25,9 @@ const CATEGORY_ICONS = {
 
 export default function ProductCard({ product, setSelectedProduct }) {
     const primaryImg  = product.images?.find(i => i.is_primary) ?? product.images?.[0];
-    const shareSlug   = product.slug ?? product.id;
-    const categoryId  = product.category_id ?? product.categoryId;
-    const price       = product.price_label ?? product.price;
+    const shareSlug   = product.shareSlug ?? product.id;
+    const categoryId  = product.categoryId;
+    const price       = product.price;
     const catMeta     = CATEGORY_ICONS[categoryId] ?? { icon: Package, color: 'text-gray-300', bg: 'bg-gray-50' };
     const CatIcon     = catMeta.icon;
 

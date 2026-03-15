@@ -21,7 +21,7 @@ const ICON_MAP = {
     Zap,
 };
 
-export default function Sidebar({
+const Sidebar = React.memo(function Sidebar({
     isSidebarOpen,
     setIsSidebarOpen,
     categories,
@@ -105,4 +105,6 @@ export default function Sidebar({
             )}
         </aside>
     );
-}
+});
+
+export default Sidebar;

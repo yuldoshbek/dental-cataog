@@ -13,11 +13,11 @@ import Badge from './ui/Badge.jsx';
 export default function Modal({ product, setSelectedProduct }) {
     if (!product) return null;
 
-    const categoryId = product.category_id ?? product.categoryId;
-    const shareSlug  = product.slug ?? product.id;
+    const categoryId = product.categoryId;
+    const shareSlug  = product.shareSlug ?? product.id;
 
-    const hasPriceGradation = product.price_min || product.price_avg || product.price_max;
-    const priceLabel = product.price_label ?? product.price;
+    const hasPriceGradation = product.priceGradation?.min || product.priceGradation?.avg || product.priceGradation?.max;
+    const priceLabel = product.price;
 
     return (
         <div
@@ -61,9 +61,9 @@ export default function Modal({ product, setSelectedProduct }) {
                             </p>
                             <div className="grid grid-cols-3 gap-2 text-center">
                                 {[
-                                    { label: 'Мин.',    value: product.price_min, accent: false },
-                                    { label: 'Средняя', value: product.price_avg, accent: true  },
-                                    { label: 'Макс.',   value: product.price_max, accent: false },
+                                    { label: 'Мин.',    value: product.priceGradation?.min, accent: false },
+                                    { label: 'Средняя', value: product.priceGradation?.avg, accent: true  },
+                                    { label: 'Макс.',   value: product.priceGradation?.max, accent: false },
                                 ].map(({ label, value, accent }) => (
                                     <div
                                         key={label}
@@ -95,21 +95,21 @@ export default function Modal({ product, setSelectedProduct }) {
                     )}
 
                     {/* Установки */}
-                    {categoryId === 'units' && (product.colors || product.upholstery || product.base_config || product.options) && (
+                    {categoryId === 'units' && (product.colors || product.upholstery || product.baseConfig || product.options) && (
                         <div className="space-y-1.5">
                             <SectionLabel>Комплектация</SectionLabel>
-                            {product.colors      && <Row label="Цвета"              value={product.colors} />}
-                            {product.upholstery  && <Row label="Обивка"             value={product.upholstery} />}
-                            {product.base_config && <Row label="Базовая комплект."  value={product.base_config} />}
-                            {product.options     && <Row label="Доп. опции"         value={product.options} accent />}
+                            {product.colors     && <Row label="Цвета"             value={product.colors} />}
+                            {product.upholstery && <Row label="Обивка"            value={product.upholstery} />}
+                            {product.baseConfig && <Row label="Базовая комплект." value={product.baseConfig} />}
+                            {product.options    && <Row label="Доп. опции"        value={product.options} accent />}
                         </div>
                     )}
 
                     {/* Компрессоры */}
-                    {categoryId === 'compressors' && (product.for_units || product.type || product.dryer || product.cover || product.cylinders) && (
+                    {categoryId === 'compressors' && (product.forUnits || product.type || product.dryer || product.cover || product.cylinders) && (
                         <div className="space-y-1.5">
                             <SectionLabel>Характеристики</SectionLabel>
-                            {product.for_units && <Row label="Для установок" value={product.for_units} />}
+                            {product.forUnits  && <Row label="Для установок" value={product.forUnits} />}
                             {product.type      && <Row label="Тип"           value={product.type} />}
                             {product.dryer     && <Row label="Осушитель"     value={product.dryer} />}
                             {product.cover     && <Row label="Кожух"         value={product.cover} />}
