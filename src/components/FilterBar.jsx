@@ -16,14 +16,15 @@ const SORT_OPTIONS = [
     { value: 'price_desc', label: 'Цена: сначала дороже' },
 ];
 
-/* ─── Утилита: извлечь уникальные страны из списка продуктов ─── */
+/* ─── Утилиты: экспортируются вместе с компонентом (fast-refresh aware) ─── */
+// eslint-disable-next-line react-refresh/only-export-components
 export function extractCountries(products) {
     const set = new Set();
     products.forEach(p => { if (p.country) set.add(p.country); });
     return [...set].sort((a, b) => a.localeCompare(b, 'ru'));
 }
 
-/* ─── Утилита: применить фильтры и сортировку ──────────────────── */
+// eslint-disable-next-line react-refresh/only-export-components
 export function applyFilters(products, { countries, sortBy }) {
     let result = [...products];
 

@@ -40,6 +40,7 @@ export function useProduct(id) {
 
     useEffect(() => {
         if (!id) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(true);
         productsApi.getById(id)
             .then(setProduct)
@@ -57,6 +58,7 @@ export function useSharedProduct(slug) {
 
     useEffect(() => {
         if (!slug) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(true);
         productsApi.getShared(slug)
             .then(setProduct)

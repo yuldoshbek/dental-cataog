@@ -53,6 +53,7 @@ export default function CatalogPage() {
 
     // Шпаргалка при смене категории
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSummary([]);
         categoriesApi.getSummary(activeCategory)
             .then(setSummary)

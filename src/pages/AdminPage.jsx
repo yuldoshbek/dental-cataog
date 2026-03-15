@@ -37,8 +37,8 @@ const ADMIN_TABS = [
 
 export default function AdminPage() {
     const { isAuthenticated, logout } = useAuth();
-    if (!isAuthenticated) return <Navigate to="/login" replace />;
 
+    // Все hooks должны быть до любого return (Rules of Hooks)
     const [categories, setCategories]     = useState([]);
     const [filterCat, setFilterCat]       = useState('all');
     const [formOpen, setFormOpen]         = useState(false);
@@ -56,9 +56,12 @@ export default function AdminPage() {
     );
 
     useEffect(() => {
+        if (!isAuthenticated) return;
         categoriesApi.getAll().then(setCategories).catch(() => {});
         inquiriesApi.getAll().then(setInquiries).catch(() => {});
-    }, []);
+    }, [isAuthenticated]);
+
+    if (!isAuthenticated) return <Navigate to="/login" replace />;
 
     /* ── Toast ── */
     function showToast(type, msg) {
@@ -177,7 +180,7 @@ export default function AdminPage() {
     });
 
     /* Встроенные компоненты формы (styled) */
-    const FInput = ({ label, name, required, type = 'text', placeholder, half }) => (
+    const FInput = ({ label, name, required, type = 'text', placeholder, half: _half }) => (
         <div>
             <label className="text-xs font-semibold text-gray-600 block mb-1">
                 {label}{required && <span className="text-red-400 ml-0.5">*</span>}
