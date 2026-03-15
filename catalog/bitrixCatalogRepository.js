@@ -328,7 +328,7 @@ export function createBitrixCatalogRepository({
 
     const items = await bitrixClient.listAll('crm.item.list', {
       entityTypeId: resolvedConfig.entityTypeId,
-      select: ['*', 'id', 'title', 'stageId', 'createdTime', 'updatedTime'],
+      select: ['*', 'UF_*', 'id', 'title', 'stageId', 'createdTime', 'updatedTime'],
       order: { updatedTime: 'DESC' },
     });
 
