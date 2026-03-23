@@ -1,37 +1,104 @@
-﻿const DEFAULT_FIELD_MAP = Object.freeze({
-  title: 'title',
-  status: 'stageId',
-  categoryId: 'ufCrmCategory',
-  brand: 'ufCrmBrand',
-  model: 'ufCrmModel',
-  country: 'ufCrmCountry',
-  priceLabel: 'ufCrmPriceLabel',
-  priceMin: 'ufCrmPriceMin',
-  priceAvg: 'ufCrmPriceAvg',
-  priceMax: 'ufCrmPriceMax',
-  description: 'ufCrmManagerDescription',
-  clientDescription: 'ufCrmClientDescription',
-  specs: 'ufCrmSpecs',
-  colors: 'ufCrmColors',
-  upholstery: 'ufCrmUpholstery',
-  baseConfig: 'ufCrmBaseConfig',
-  options: 'ufCrmOptions',
-  forUnits: 'ufCrmForUnits',
-  dryer: 'ufCrmDryer',
-  cover: 'ufCrmCover',
-  type: 'ufCrmType',
-  cylinders: 'ufCrmCylinders',
-  dimensions: 'ufCrmDimensions',
-  primaryImage: 'ufCrmPrimaryImage',
-  gallery: 'ufCrmGallery',
-  shareSlug: 'ufCrmShareSlug',
-  externalCode: 'ufCrmExternalCode',
-  isActive: 'ufCrmIsActive',
-  publishWeb: 'ufCrmPublishWeb',
-  publishShare: 'ufCrmPublishShare',
-  publishTelegram: 'ufCrmPublishTelegram',
+/**
+ * bitrixConfig.js
+ *
+ * Конфигурация Bitrix24 интеграции для dental-catalog.
+ *
+ * Смарт-процесс: «Каталог оборудования»
+ *   SP ID:         35
+ *   entityTypeId:  1106
+ *   Домен:         3dexpert.bitrix24.ru
+ *
+ * Поля созданы в Bitrix и соответствуют архитектуре (.ai_agent_memory/data_schema.md).
+ * DEFAULT_FIELD_MAP, DEFAULT_CATEGORY_MAP и DEFAULT_STAGE_MAP прошиты по факту
+ * — env-переменные нужны только для override.
+ */
+
+// ─── Маппинг полей: ключ = app-имя, значение = код поля в Bitrix API ─────────
+// Все UF_CRM_35_* коды получены из crm.item.fields (entityTypeId=1106, 23.03.2026)
+const DEFAULT_FIELD_MAP = Object.freeze({
+  // Системные
+  title:              'title',
+  status:             'stageId',
+
+  // Идентификаторы
+  externalCode:       'UF_CRM_35_1773638674',
+  shareSlug:          'UF_CRM_35_1773647204',
+  categoryId:         'UF_CRM_35_1773647756',   // enumeration (8 значений)
+
+  // Основные данные
+  brand:              'UF_CRM_35_1773655225',
+  model:              'UF_CRM_35_1773655598',
+  country:            'UF_CRM_35_1773656378',
+
+  // Цены
+  priceLabel:         'UF_CRM_35_1773656991',
+  priceMin:           'UF_CRM_35_1773657527',   // double
+  priceAvg:           'UF_CRM_35_1773658331',   // string (числовые значения корректны)
+  priceMax:           'UF_CRM_35_1773771966',   // double
+
+  // Описания
+  description:        'UF_CRM_35_1773909482',   // manager_description (для менеджеров)
+  clientDescription:  'UF_CRM_35_1773906219',   // client_description (для клиента)
+
+  // Характеристики
+  specs:              'UF_CRM_35_1773961626',
+  colors:             'UF_CRM_35_1773962010',
+  upholstery:         'UF_CRM_35_1773962106',
+  baseConfig:         'UF_CRM_35_1773962180',
+  options:            null,                     // не создавалось в Bitrix смарт-процессе
+  forUnits:           'UF_CRM_35_1773962262',
+  dryer:              'UF_CRM_35_1773962398',
+  cover:              'UF_CRM_35_1773962480',
+  type:               'UF_CRM_35_1773962581',   // equipment_type
+  cylinders:          'UF_CRM_35_1773906608',
+  dimensions:         'UF_CRM_35_1773962687',
+
+  // Медиа
+  primaryImage:       'UF_CRM_35_1774173034',   // file
+  gallery:            'UF_CRM_35_1774173226',   // file, multiple
+
+  // Управление публикацией
+  isActive:           'UF_CRM_35_1773962772',   // boolean
+  publishWeb:         'UF_CRM_35_1774162123',   // boolean
+  publishShare:       'UF_CRM_35_1774164022',   // boolean
+  publishTelegram:    'UF_CRM_35_1774164088',   // boolean
+
+  // Служебные
+  searchTags:         'UF_CRM_35_1773907582',
+  sortOrder:          'UF_CRM_35_1773906476',
+  lastSyncHash:       'UF_CRM_35_1774163735',
+  sourceUpdatedAt:    'UF_CRM_35_1773658861',
 });
 
+// ─── Маппинг категорий ────────────────────────────────────────────────────────
+// Bitrix enumeration ID → внутренний categoryId
+// Enum-значения: crm.item.fields UF_CRM_35_1773647756 (23.03.2026)
+const DEFAULT_CATEGORY_MAP = Object.freeze({
+  '1229': 'units',          // Установки
+  '1231': 'compressors',    // Компрессоры
+  '1233': 'autoclaves',     // Автоклавы
+  '1235': 'physio',         // Физиодиспенсеры
+  '1237': 'scanners',       // Интраоральные сканеры
+  '1239': 'xray',           // Портативные рентгены
+  '1241': 'visiographs',    // Визиографы
+  '1243': 'handpieces',     // Наконечники
+
+  // Имена (запасной вариант, если Bitrix вернёт строку вместо ID)
+  'Портативные рентгены':   'xray',  // в Bitrix отличается от нашего «Рентгены портативные»
+});
+
+// ─── Маппинг стадий ───────────────────────────────────────────────────────────
+// Bitrix stageId → внутренний статус ('draft'|'review'|'ready_internal'|'published'|'archived')
+// Стадии: crm.status.list filter[ENTITY_ID]=DYNAMIC_1106_STAGE_57 (23.03.2026)
+const DEFAULT_STAGE_MAP = Object.freeze({
+  'DT1106_57:NEW':            'draft',          // Черновик
+  'DT1106_57:review':         'review',         // На проверке
+  'DT1106_57:ready_internal': 'ready_internal', // Готово для менеджеров
+  'DT1106_57:SUCCESS':        'published',      // Опубликовано
+  'DT1106_57:FAIL':           'archived',       // Архив
+});
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function parseJsonEnv(name, fallback) {
   const rawValue = process.env[name];
   if (!rawValue) {
@@ -54,33 +121,32 @@ export function getCatalogProviderFromEnv() {
 }
 
 export function getBitrixCatalogConfig() {
-  const entityTypeId = Number.parseInt(process.env.BITRIX_SMART_PROCESS_ENTITY_TYPE_ID ?? '', 10);
-  const cacheTtlMs = Number.parseInt(process.env.BITRIX_CACHE_TTL_MS ?? '60000', 10);
+  const entityTypeId = Number.parseInt(process.env.BITRIX_SMART_PROCESS_ENTITY_TYPE_ID ?? '1106', 10);
+  const cacheTtlMs   = Number.parseInt(process.env.BITRIX_CACHE_TTL_MS ?? '60000', 10);
 
   return {
-    webhookUrl: (process.env.BITRIX_WEBHOOK_URL ?? '').trim(),
-    entityTypeId: Number.isFinite(entityTypeId) ? entityTypeId : null,
-    cacheTtlMs: Number.isFinite(cacheTtlMs) && cacheTtlMs >= 0 ? cacheTtlMs : 60000,
-    fieldMap: {
-      ...DEFAULT_FIELD_MAP,
-      ...parseJsonEnv('BITRIX_FIELD_MAP_JSON', {}),
-    },
-    categoryMap: parseJsonEnv('BITRIX_CATEGORY_MAP_JSON', {}),
-    stageMap: parseJsonEnv('BITRIX_STAGE_MAP_JSON', {}),
+    webhookUrl:   (process.env.BITRIX_WEBHOOK_URL ?? '').trim(),
+    entityTypeId: Number.isFinite(entityTypeId) ? entityTypeId : 1106,
+    cacheTtlMs:   Number.isFinite(cacheTtlMs) && cacheTtlMs >= 0 ? cacheTtlMs : 60000,
+
+    // Env-переменные MERGE поверх defaults → override конкретных полей без замены всего маппинга
+    fieldMap:     { ...DEFAULT_FIELD_MAP,     ...parseJsonEnv('BITRIX_FIELD_MAP_JSON', {}) },
+    categoryMap:  { ...DEFAULT_CATEGORY_MAP,  ...parseJsonEnv('BITRIX_CATEGORY_MAP_JSON', {}) },
+    stageMap:     { ...DEFAULT_STAGE_MAP,     ...parseJsonEnv('BITRIX_STAGE_MAP_JSON', {}) },
   };
 }
 
 export function ensureBitrixCatalogConfig(config = getBitrixCatalogConfig()) {
   if (!config.webhookUrl) {
     throw Object.assign(
-      new Error('Не задан BITRIX_WEBHOOK_URL для Bitrix provider.'),
+      new Error('Не задан BITRIX_WEBHOOK_URL. Добавьте в server/.env.'),
       { status: 500 },
     );
   }
 
   if (!config.entityTypeId) {
     throw Object.assign(
-      new Error('Не задан BITRIX_SMART_PROCESS_ENTITY_TYPE_ID для Bitrix provider.'),
+      new Error('Не задан BITRIX_SMART_PROCESS_ENTITY_TYPE_ID.'),
       { status: 500 },
     );
   }
@@ -88,4 +154,4 @@ export function ensureBitrixCatalogConfig(config = getBitrixCatalogConfig()) {
   return config;
 }
 
-export { DEFAULT_FIELD_MAP };
+export { DEFAULT_FIELD_MAP, DEFAULT_CATEGORY_MAP, DEFAULT_STAGE_MAP };
