@@ -13,61 +13,63 @@
  * — env-переменные нужны только для override.
  */
 
-// ─── Маппинг полей: ключ = app-имя, значение = код поля в Bitrix API ─────────
-// Все UF_CRM_35_* коды получены из crm.item.fields (entityTypeId=1106, 23.03.2026)
+// ─── Маппинг полей: ключ = app-имя, значение = имя поля в Bitrix API ─────────
+// Bitrix возвращает UF-поля в camelCase: ufCrm35_XXXXXXXXXX
+// (не UF_CRM_35_* — это только код при создании поля в настройках Bitrix)
+// Получено из crm.item.get (entityTypeId=1106, 23.03.2026)
 const DEFAULT_FIELD_MAP = Object.freeze({
   // Системные
   title:              'title',
   status:             'stageId',
 
   // Идентификаторы
-  externalCode:       'UF_CRM_35_1773638674',
-  shareSlug:          'UF_CRM_35_1773647204',
-  categoryId:         'UF_CRM_35_1773647756',   // enumeration (8 значений)
+  externalCode:       'ufCrm35_1773638674',
+  shareSlug:          'ufCrm35_1773647204',
+  categoryId:         'ufCrm35_1773647756',   // enumeration (8 значений, ID → число)
 
   // Основные данные
-  brand:              'UF_CRM_35_1773655225',
-  model:              'UF_CRM_35_1773655598',
-  country:            'UF_CRM_35_1773656378',
+  brand:              'ufCrm35_1773655225',
+  model:              'ufCrm35_1773655598',
+  country:            'ufCrm35_1773656378',
 
   // Цены
-  priceLabel:         'UF_CRM_35_1773656991',
-  priceMin:           'UF_CRM_35_1773657527',   // double
-  priceAvg:           'UF_CRM_35_1773658331',   // string (числовые значения корректны)
-  priceMax:           'UF_CRM_35_1773771966',   // double
+  priceLabel:         'ufCrm35_1773656991',
+  priceMin:           'ufCrm35_1773657527',   // double
+  priceAvg:           'ufCrm35_1773658331',   // string (числовые значения корректны)
+  priceMax:           'ufCrm35_1773771966',   // double
 
   // Описания
-  description:        'UF_CRM_35_1773909482',   // manager_description (для менеджеров)
-  clientDescription:  'UF_CRM_35_1773906219',   // client_description (для клиента)
+  description:        'ufCrm35_1773909482',   // manager_description
+  clientDescription:  'ufCrm35_1773906219',   // client_description
 
   // Характеристики
-  specs:              'UF_CRM_35_1773961626',
-  colors:             'UF_CRM_35_1773962010',
-  upholstery:         'UF_CRM_35_1773962106',
-  baseConfig:         'UF_CRM_35_1773962180',
-  options:            null,                     // не создавалось в Bitrix смарт-процессе
-  forUnits:           'UF_CRM_35_1773962262',
-  dryer:              'UF_CRM_35_1773962398',
-  cover:              'UF_CRM_35_1773962480',
-  type:               'UF_CRM_35_1773962581',   // equipment_type
-  cylinders:          'UF_CRM_35_1773906608',
-  dimensions:         'UF_CRM_35_1773962687',
+  specs:              'ufCrm35_1773961626',
+  colors:             'ufCrm35_1773962010',
+  upholstery:         'ufCrm35_1773962106',
+  baseConfig:         'ufCrm35_1773962180',
+  options:            null,                   // не создавалось в Bitrix смарт-процессе
+  forUnits:           'ufCrm35_1773962262',
+  dryer:              'ufCrm35_1773962398',
+  cover:              'ufCrm35_1773962480',
+  type:               'ufCrm35_1773962581',   // equipment_type
+  cylinders:          'ufCrm35_1773906608',
+  dimensions:         'ufCrm35_1773962687',
 
   // Медиа
-  primaryImage:       'UF_CRM_35_1774173034',   // file
-  gallery:            'UF_CRM_35_1774173226',   // file, multiple
+  primaryImage:       'ufCrm35_1774173034',   // file
+  gallery:            'ufCrm35_1774173226',   // file, multiple
 
   // Управление публикацией
-  isActive:           'UF_CRM_35_1773962772',   // boolean
-  publishWeb:         'UF_CRM_35_1774162123',   // boolean
-  publishShare:       'UF_CRM_35_1774164022',   // boolean
-  publishTelegram:    'UF_CRM_35_1774164088',   // boolean
+  isActive:           'ufCrm35_1773962772',   // boolean → 'Y'/'N' или true/false
+  publishWeb:         'ufCrm35_1774162123',
+  publishShare:       'ufCrm35_1774164022',
+  publishTelegram:    'ufCrm35_1774164088',
 
   // Служебные
-  searchTags:         'UF_CRM_35_1773907582',
-  sortOrder:          'UF_CRM_35_1773906476',
-  lastSyncHash:       'UF_CRM_35_1774163735',
-  sourceUpdatedAt:    'UF_CRM_35_1773658861',
+  searchTags:         'ufCrm35_1773907582',
+  sortOrder:          'ufCrm35_1773906476',
+  lastSyncHash:       'ufCrm35_1774163735',
+  sourceUpdatedAt:    'ufCrm35_1773658861',
 });
 
 // ─── Маппинг категорий ────────────────────────────────────────────────────────
